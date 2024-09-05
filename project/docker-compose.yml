@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # PHP service
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - mynetwork
+
+  # Nginx service
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8085:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - php
+    networks:
+      - mynetwork
+
+  # MySQL service
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - mynetwork
+
+  # phpMyAdmin service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - mynetwork
+
+# Define the network
+networks:
+  mynetwork:
+    driver: bridge
+
+# Define volumes for data persistence
+volumes:
+  db_data:
